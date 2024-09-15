@@ -14,6 +14,10 @@ driver = webdriver.Chrome()
 # Base URL of the election results site
 BASE_URL = "https://www.inecelectionresults.ng/pres/elections/63f8f25b594e164f8146a213?type=pres"
 
+def clean_up_name(string):
+    
+    test_str = ''.join(letter for letter in string if letter.isalnum())
+    return test_str
 # Function to download PDF file
 def download_pdf(pdf_url, save_path):
     response = requests.get(pdf_url)
@@ -21,21 +25,25 @@ def download_pdf(pdf_url, save_path):
         file.write(response.content)
 
 # Create directories for State, LGAs, Wards, and Polling Units
-def create_directories(base_dir, state, lga, ward, polling_unit):
+def create_directories(base_dir, state, lga, ward):
     state_dir = os.path.join(base_dir, state)
     lga_dir = os.path.join(state_dir, lga)
-    ward_dir = os.path.join(lga_dir, ward)
-    polling_unit_dir = os.path.join(ward_dir, polling_unit)
+    polling_unit_dir = os.path.join(lga_dir, ward)
+    #polling_unit_dir = os.path.join(ward_dir, polling_unit)
     os.makedirs(polling_unit_dir, exist_ok=True)
     return polling_unit_dir
 
 # Extract text from PDF and return as string
-def extract_pdf_text(pdf_path):
-    with pdfplumber.open(pdf_path) as pdf:
-        text = ""
-        for page in pdf.pages:
-            text += page.extract_text()
-    return text
+def extract_pdf_text(pdf_path, pu_exception, ward_exception, state_exception):
+    try:
+        with pdfplumber.open(pdf_path) as pdf:
+            text = ""
+            for page in pdf.pages:
+                text += page.extract_text()
+        return text
+    except Exception as e:
+        print("The error is: ", e, " Polling unit is ", pu_exception, " Ward is ", ward_exception, " State is ", state_exception)
+
 
 # Selenium function to navigate and scrape the links dynamically
 def scrape_election_data_selenium(base_url, base_dir):
@@ -51,6 +59,7 @@ def scrape_election_data_selenium(base_url, base_dir):
         print(state_link)
         state_name = state_link.text.strip()
         print(state_name)
+        state_name = clean_up_name(state_name)
         state_url = state_link['href']
         print(state_url)
         full_state_url = "https://www.inecelectionresults.ng"+state_url
@@ -67,6 +76,7 @@ def scrape_election_data_selenium(base_url, base_dir):
             print(lga_link)
             lga_name = lga_link.text.strip()
             print(lga_name)
+            lga_name = clean_up_name(lga_name)
             lga_url = lga_link['href']
             print(lga_url)
             full_lga_url = "https://www.inecelectionresults.ng"+lga_url
@@ -83,6 +93,7 @@ def scrape_election_data_selenium(base_url, base_dir):
                 print(ward_link)
                 ward_name = ward_link.text.strip()
                 print(ward_name)
+                ward_name = clean_up_name(ward_name)
                 ward_url = ward_link['href']
                 print(ward_url)
                 full_ward_url = "https://www.inecelectionresults.ng"+ward_url
@@ -97,7 +108,7 @@ def scrape_election_data_selenium(base_url, base_dir):
                 
                 for pu_link in polling_unit_links:
                     print(pu_link)
-                    pu_name = pu_link.text.strip()
+                    pu_name = clean_up_name(pu_link['href'])
                     print(pu_name)
                     pu_url = pu_link['href']
                     print(pu_url)
@@ -105,16 +116,19 @@ def scrape_election_data_selenium(base_url, base_dir):
                     time.sleep(20)
                     
                     # Find and download the PDF file
-                    pdf_link = BeautifulSoup(driver.page_source, 'html.parser')
+                    #pdf_link = BeautifulSoup(driver.page_source, 'html.parser')
+                    #print(pdf_link)
                     #pdf_link = pu_soup.find('a', class_='')['href']  # Adjust based on actual class name
                     
                     # Create directories and download PDF
-                    polling_unit_dir = create_directories(base_dir, state_name, lga_name, ward_name, pu_name)
+                    polling_unit_dir = create_directories(base_dir, state_name, lga_name, ward_name)
+                    print(polling_unit_dir)
                     pdf_path = os.path.join(polling_unit_dir, f'{pu_name}.pdf')
-                    download_pdf(pdf_link, pdf_path)
+                    print(pdf_path)
+                    download_pdf(pu_url, pdf_path)
                     
                     # Extract text from the downloaded PDF
-                    pdf_text = extract_pdf_text(pdf_path)
+                    pdf_text = extract_pdf_text(pdf_path, pu_name, ward_name, state_name)
                     
                     # Append data to the list
                     data.append({
