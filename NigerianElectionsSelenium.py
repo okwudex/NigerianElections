@@ -6,6 +6,8 @@ from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 import pandas as pd
 import pdfplumber
+from pdf2image import convert_from_path
+from pytesseract import image_to_string
 
 # Initialize WebDriver (adjust the path to your chromedriver)
 driver_path = "Users/okwud/Downloads/chromedriver"  # Specify the correct path
