@@ -70,9 +70,13 @@ def scrape_election_data(base_url, base_dir):
                 ward_response = requests.get(ward_url)
                 ward_soup = BeautifulSoup(ward_response.content, 'html.parser')
                 polling_unit_links = ward_soup.find_all('a', class_='polling-unit-link')  # Adjust based on page
+                pu_names = ward_soup.find_all('div', class_='h6')
                 
                 for pu_link in polling_unit_links:
-                    pu_name = pu_link.text.strip()
+                    namelist = 0
+                    pu_name = pu_names[namelist]
+                    pu_name = pu_name.text.strip()
+                    namelist += 1
                     pu_url = pu_link['href']
                     
                     # Scrape the polling unit to get the PDF link
