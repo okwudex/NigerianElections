@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Error><Code>NoSuchBucket</Code><Message>The specified bucket does not exist</Message><BucketName>inec-cvr-cache</BucketName><RequestId>BZNAME0A3AKN5DNX</RequestId><HostId>zMgUcvwpo3dkR5SLp8o5fvpz0fRh7/ZdTrAvLv4fIAqbWm+nDTl2dZ4gm+bI8JOIo5xlHu3/Uso=</HostId></Error>
