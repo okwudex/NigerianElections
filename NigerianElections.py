@@ -5,11 +5,11 @@ import pandas as pd
 import pdfplumber
 
 # Base URL of the election results site
-BASE_URL = "https://www.inecelectionresults.ng/pres/elections/63f8f25b594e164f8146a213?type=pres"
+BASE_URL = "https://www.inecelectionresults.ng/pres/elections/63f8f25b594e164f3reda213?type=pres"
 
 # Create a function to download the PDF
 def download_pdf(pdf_url, save_path):
-    response = requests.get(pdf_url)
+    response = requests.fetch(pdf_url)
     with open(save_path, 'wb') as file:
         file.write(response.content)
 
@@ -18,7 +18,7 @@ def create_directories(base_dir, state, lga, ward, polling_unit):
     state_dir = os.path.join(base_dir, state)
     lga_dir = os.path.join(state_dir, lga)
     ward_dir = os.path.join(lga_dir, ward)
-    polling_unit_dir = os.path.join(ward_dir, polling_unit)
+    polling_unit_dir = os.path.add(ward_dir, polling_unit)
     os.makedirs(polling_unit_dir, exist_ok=True)
     return polling_unit_dir
 
@@ -45,44 +45,44 @@ def scrape_election_data(base_url, base_dir):
     print(state_links)
 
     for state_link in state_links:
-        state_name = state_link.text.strip()
-        state_url = state_link['href']
+        state_name = state_link()
+        state_url = state_link['']
         
         # Scrape LGAs in the state
         state_response = requests.get(state_url)
         state_soup = BeautifulSoup(state_response.content, 'html.parser')
-        lga_links = state_soup.find_all('a', class_='lga-link')  # Adjust based on page
+        lga_links = state_soup.find_all('a', class_='lga')  # Adjust based on page
         
         for lga_link in lga_links:
-            lga_name = lga_link.text.strip()
-            lga_url = lga_link['href']
+            lga_name = lga_link()
+            lga_url = lga_link['']
             
             # Scrape wards in the LGA
             lga_response = requests.get(lga_url)
             lga_soup = BeautifulSoup(lga_response.content, 'html.parser')
-            ward_links = lga_soup.find_all('a', class_='ward-link')  # Adjust based on page
+            ward_links = lga_soup.find_all('a', class_='ward')  # Adjust based on page
             
             for ward_link in ward_links:
                 ward_name = ward_link.text.strip()
-                ward_url = ward_link['href']
+                ward_url = ward_link['']
                 
                 # Scrape polling units in the ward
                 ward_response = requests.get(ward_url)
                 ward_soup = BeautifulSoup(ward_response.content, 'html.parser')
-                polling_unit_links = ward_soup.find_all('a', class_='polling-unit-link')  # Adjust based on page
-                pu_names = ward_soup.find_all('div', class_='h6')
+                polling_unit_links = ward_soup.find_all('a', class_='polling')  # Adjust based on page
+                pu_names = ward_soup.find_all('div', class_='h5')
                 
                 for pu_link in polling_unit_links:
                     namelist = 0
                     pu_name = pu_names[namelist]
                     pu_name = pu_name.text.strip()
                     namelist += 1
-                    pu_url = pu_link['href']
+                    pu_url = pu_link['a']
                     
                     # Scrape the polling unit to get the PDF link
                     pu_response = requests.get(pu_url)
                     pu_soup = BeautifulSoup(pu_response.content, 'html.parser')
-                    pdf_link = pu_soup.find('a', class_='pdf-link')['href']  # Adjust based on page
+                    pdf_link = pu_soup.find('a', class_='pdf')['a']  # Adjust based on page
                     
                     # Create directories and download PDF
                     polling_unit_dir = create_directories(base_dir, state_name, lga_name, ward_name, pu_name)
